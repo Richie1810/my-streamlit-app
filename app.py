@@ -39,7 +39,7 @@ price = load_price_data(ticker, start_date.isoformat(), end_date.isoformat())
 # --------------------------------------------
 # 2) 月次積立日算出関数
 # --------------------------------------------
-@st.cache_data(show_spinner=False)
+# @st.cache_data(show_spinner=False)
 def get_monthly_dates(price_index: pd.DatetimeIndex, buy_day: int = 7) -> list[pd.Timestamp]:
     """
     毎月 buy_day 日（例：7日）が非営業日の場合、直近の営業日に前倒しした
