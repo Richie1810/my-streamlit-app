@@ -11,7 +11,7 @@ plt.rcParams['font.family'] = 'Meiryo'
 # --------------------------------------------
 # 1) データ取得をキャッシュ化
 # --------------------------------------------
-@st.cache_data(show_spinner=False)
+# @st.cache_data(show_spinner=False)
 def load_price_data(ticker: str, start: str, end: str) -> pd.Series:
     """
     yfinance を使って日次終値を取得し、DatetimeIndex を normalize して返す。
