@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import yfinance as yf
 import matplotlib.pyplot as plt
 
@@ -220,7 +221,8 @@ with st.expander("パラメータ感度分析"):
     # --- 2) グリッドサーチ実行 ---
     for i, y_val in enumerate(grid_y):
         for j, x_val in enumerate(grid_x):
-            fv, ti = simulate_strategy(
+            _, _, fv, ti = simulate_strategy(
+            # fv, ti = simulate_strategy(
                 price=price,
                 monthly_dates=monthly_dates,
                 monthly_amount=monthly_amount,
