@@ -198,9 +198,64 @@ if run_button or True:
 # --------------------------------------------
 # 6) （オプション）パラメータ感度ヒートマップなど
 # --------------------------------------------
+# with st.expander("パラメータ感度分析"):
+#     st.write("ここに細かいグリッドサーチ結果のヒートマップや上位結果を表示できます。")
+#     # 例：st.dataframe(df_grid_results), st.pyplot(fig_heatmap) など
 with st.expander("パラメータ感度分析"):
-    st.write("ここに細かいグリッドサーチ結果のヒートマップや上位結果を表示できます。")
-    # 例：st.dataframe(df_grid_results), st.pyplot(fig_heatmap) など
+    st.write("x, y を固定幅でグリッドサーチし、リターンをヒートマップで表示します。")
+    
+    # --- 1) グリッドを定義 ---
+    # 例として x ∈ [0.0, 0.6], y ∈ [0.0, 0.3] を 11×11 の格子で試す
+    grid_x = np.linspace(0.0, 0.6, 11)
+    grid_y = np.linspace(0.0, 0.3, 11)
+    fixed_z = 1.0  # z は固定値としておく（例）
+    
+    # 結果を pandas.DataFrame に格納する準備
+    results_matrix = pd.DataFrame(
+        data=np.zeros((len(grid_y), len(grid_x))),
+        index=[f"{y:.2f}" for y in grid_y],
+        columns=[f"{x:.2f}" for x in grid_x]
+    )
+    
+    # --- 2) グリッドサーチ実行 ---
+    for i, y_val in enumerate(grid_y):
+        for j, x_val in enumerate(grid_x):
+            fv, ti = simulate_strategy(
+                price=price,
+                monthly_dates=monthly_dates,
+                monthly_amount=monthly_amount,
+                x=x_val,
+                y=y_val,
+                z=fixed_z
+            )
+            # 投資額 ti が 0 でないことを確認しつつ
+            if ti > 0:
+                ret = float(fv / ti)
+            else:
+                ret = np.nan
+            results_matrix.iloc[i, j] = ret
+    
+    # --- 3) ヒートマップで可視化 ---
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.heatmap(
+        results_matrix.astype(float),
+        annot=False,
+        cmap="RdYlBu_r",
+        ax=ax,
+        cbar_kws={"label": "最終リターン倍率"}
+    )
+    ax.set_xlabel("現金保持率 x")
+    ax.set_ylabel("暴落閾値 y")
+    ax.set_title(f"z={fixed_z:.2f} のときのリターン感度マップ")
+    st.pyplot(fig)
+    
+    # --- 4) 上位 5 パターンをテーブル表示 ---
+    # DataFrame を一旦縦持ち（long）に変形してソートすると便利
+    df_long = results_matrix.stack().reset_index()
+    df_long.columns = ["y（暴落閾値）", "x（現金保持率）", "return"]
+    df_top5 = df_long.sort_values("return", ascending=False).head(5)
+    st.write("### 感度分析：上位 5 パターン（z 固定）")
+    st.dataframe(df_top5.style.format({"return": "{:.3f}"}))
 
 # --------------------------------------------
 # 7) （オプション）Optuna 最適化ボタン
