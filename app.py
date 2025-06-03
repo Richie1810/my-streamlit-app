@@ -4,6 +4,7 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns  # ヒートマップ用
+import numpy_financial as nf
 
 # 日本語フォントを使いたい場合（Windows 例：Meiryo）
 plt.rcParams['font.family'] = 'Meiryo'
@@ -123,7 +124,7 @@ def calc_annual_irr(cashflow: list[float], dates: list[pd.Timestamp]) -> float:
     for cf, m in zip(cashflow, months):
         cash_series[m] += cf
 
-    irr_monthly = np.irr(cash_series)
+    irr_monthly = nf.irr(cash_series)
     if irr_monthly is None or np.isnan(irr_monthly):
         return np.nan
 
