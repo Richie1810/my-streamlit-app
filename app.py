@@ -3,11 +3,18 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import seaborn as sns  # ヒートマップ用
 import numpy_financial as nf
 
-# 日本語フォントを使いたい場合（Windows 例：Meiryo）
-plt.rcParams['font.family'] = 'Meiryo'
+# =============================================================================
+# ★★★ 日本語フォント読み込み ★★★
+#    リポジトリ直下の "fonts/NotoSansCJKjp-Regular.otf" を指す
+# =============================================================================
+font_path = Path(__file__).parent / "fonts" / "NotoSansCJKjp-Regular.otf"
+jp_font = fm.FontProperties(fname=str(font_path))
+plt.rcParams['font.family'] = jp_font.get_name()
+# ─────────────────────────────────────────────────────────
 
 # -----------------------------------------------------------------------------
 # 1) データ取得関数
