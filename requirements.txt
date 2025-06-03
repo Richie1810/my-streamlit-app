@@ -5,3 +5,4 @@ pandas
 numpy
 seaborn
 optuna
+numpy_financial
