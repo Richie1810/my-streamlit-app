@@ -159,6 +159,47 @@ buy_day = st.sidebar.number_input(
 run_button = st.sidebar.button("シミュレーション実行")
 
 # --------------------------------------------
+# 年率計算の関数
+# --------------------------------------------
+# IRR（内部収益率）を計算する関数。numpy_financial があればそれを使ってもOK。
+# ここでは標準の np.irr を使いますが、将来こちらがなくなる場合は numpy_financial.irr に置き換えてください。
+def calc_annual_irr(cashflow, dates):
+    """
+    cashflow: float の list, 負の値は投資(支出)、正の値は回収(収入) を表す
+    dates:   datetime の list, cashflow[i] に対応する日付
+    戻り値:  年率リターン (小数)
+    """
+    # np.irr は等間隔キャッシュフロー（月次や四半期など）を前提に設計されているので、
+    # “日付ベースの厳密な IRR” ではなく「月次」で等間隔と仮定して計算します。
+    # ここでは「一番最初の投資日を 0 として、各キャッシュフローが何か月後か」を整数で与えます。
+    start_date = dates[0]
+    # 各日付が start_date から何か月後になるかを計算
+    months = []
+    for d in dates:
+        # 年と月の差を「何か月後か」に変換
+        ym_diff = (d.year - start_date.year) * 12 + (d.month - start_date.month)
+        months.append(ym_diff)
+    # 0 から max(months) まで月数ごとのキャッシュフロー配列を作る
+    t0 = months[0]
+    # 最初の要素と最後の要素は揃っているはずなので、months[0] はたぶん 0
+    # 等間隔 IRR を求めるために、月次配列の長さを確定
+    n_months = months[-1] + 1  # たとえば months = [0, 1, 2, ..., 最終月] なら len=n_months
+    # 各月ベースのキャッシュフローをすべてゼロで初期化
+    cash_series = np.zeros(n_months)
+    # もとの「支出・収入」を該当するインデックスにセット
+    for cf, m in zip(cashflow, months):
+        cash_series[m] += cf
+
+    # np.irr（または numpy_financial.irr）を適用
+    irr_monthly = np.irr(cash_series)  # 例えば 0.015 なら 月次 1.5％
+    if irr_monthly is None or np.isnan(irr_monthly):
+        return np.nan
+
+    # 年率に直す
+    annual_irr = (1 + irr_monthly) ** 12 - 1
+    return annual_irr
+
+# --------------------------------------------
 # 5) ユーザー入力を反映して必要なデータを更新
 # --------------------------------------------
 # (A) monthly_dates を再計算
@@ -177,6 +218,28 @@ if run_button or True:
         y=y,
         z=z
     )
+    
+    # キャッシュフローリストを作る
+    cf_dates = []     # キャッシュフローの日付リスト
+    cf_values = []    # 同じ順序でキャッシュフローの金額（マイナスは支出）リスト
+
+    # 1) 各月の「月次投資日」に - 月次積立額 をキャッシュフローとして登録
+    for d in monthly_dates:
+        cf_dates.append(d)
+        cf_values.append(-monthly_amount)
+
+    # 2) 最終日（価格の最後のインデックスの日）に + final_value をキャッシュフローとして登録
+    last_date = price.index[-1]  # 最終取引日
+    cf_dates.append(last_date)
+    cf_values.append(+final_value)
+
+    # 3) 年率 IRR を計算
+    annual_irr = calc_annual_irr(cf_values, cf_dates)
+    # annual_irr が None や NaN だった場合はガードする
+    if np.isnan(annual_irr):
+        annual_display = "計算不可"
+    else:
+        annual_display = f"{annual_irr*100:.2f}%"
 
     # 5-1) メトリクス表示
     st.subheader("シミュレーション結果")
