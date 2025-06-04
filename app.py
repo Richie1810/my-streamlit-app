@@ -12,9 +12,18 @@ import numpy_financial as nf
 # ★★★ 日本語フォント読み込み ★★★
 #    リポジトリ直下の "fonts/NotoSansCJKjp-Regular.otf" を指す
 # =============================================================================
+# 1) フォントファイルのパスを定義
 font_path = Path(__file__).parent / "fonts" / "NotoSansCJKjp-Regular.otf"
-jp_font = fm.FontProperties(fname=str(font_path))
-plt.rcParams['font.family'] = jp_font.get_name()
+
+# 2) matplotlib にフォントを登録
+#    （これをやらないと、Cloud 環境だと rcParams にセットしても反映されないことが多い）
+fm.fontManager.addfont(str(font_path))
+
+# 3) 実際に使うフォント名（ファミリ名）を rcParams に書き込む
+#    通常は Noto Sans CJK JP のファミリ名が "Noto Sans CJK JP" か "NotoSansCJKjp-Regular" になりますが、
+#    どちらにしても問題なくレンダリングされることが多いです。
+#    一般的には addfont 後、以下のように設定しておけば OK です。
+plt.rcParams["font.family"] = fm.FontProperties(fname=str(font_path)).get_name()
 # ─────────────────────────────────────────────────────────
 
 # -----------------------------------------------------------------------------
